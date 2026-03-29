@@ -2,11 +2,10 @@
 
 A clean and fully functional **ToDo List** application for iOS, built following VIPER architecture principles.
 
-![Swift](https://img.shields.io/badge/Swift-5.9-orange?logo=swift)
+![Swift](https://img.shields.io/badge/Swift-6.2.3-orange?logo=swift)
 ![Platform](https://img.shields.io/badge/Platform-iOS%2016%2B-blue?logo=apple)
 ![Architecture](https://img.shields.io/badge/Architecture-VIPER-purple)
 ![Storage](https://img.shields.io/badge/Storage-CoreData-green)
-![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
 
