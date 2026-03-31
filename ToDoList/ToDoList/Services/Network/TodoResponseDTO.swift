@@ -6,7 +6,7 @@
 //
 
 struct TodoResponseDTO: Decodable {
-    let todos: [Todo]
+    let todos: [TodoDTO]
     let total: Int
     let skip: Int
     let limit: Int
