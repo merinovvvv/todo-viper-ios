@@ -12,4 +12,5 @@ protocol CoreDataServiceProtocol {
     func saveTodo(_ todo: Todo) -> Result<Void, CoreDataError>
     func updateTodo(_ todo: Todo) -> Result<Void, CoreDataError>
     func deleteTodo(id: UUID) -> Result<Void, CoreDataError>
+    func isStoreEmpty() -> Bool
 }

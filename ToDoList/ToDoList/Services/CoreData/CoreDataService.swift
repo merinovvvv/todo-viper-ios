@@ -96,4 +96,12 @@ final class CoreDataService: CoreDataServiceProtocol {
         
         return result
     }
+    
+    // MARK: - Helpers
+    
+    func isStoreEmpty() -> Bool {
+        let request = TodoEntity.fetchRequest()
+        let count = (try? stack.mainContext.count(for: request)) ?? 0
+        return count == 0
+    }
 }
