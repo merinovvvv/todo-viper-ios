@@ -16,14 +16,14 @@ final class CoreDataService: CoreDataServiceProtocol {
         self.stack = stack
     }
     
-    func fetchTodos() -> Result<[Todo], CoreDataError> {
+    func fetchTodos() -> Result<[TodoEntity], CoreDataError> {
         let context = stack.mainContext
         let request = TodoEntity.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
         
         do {
             let entities = try context.fetch(request)
-            return .success(entities.map { $0.toDomain() })
+            return .success(entities)
         } catch {
             return .failure(.fetchFailed)
         }

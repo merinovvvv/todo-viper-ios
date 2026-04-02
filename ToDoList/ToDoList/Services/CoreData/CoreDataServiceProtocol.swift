@@ -8,7 +8,7 @@
 import Foundation
 
 protocol CoreDataServiceProtocol {
-    func fetchTodos() -> Result<[Todo], CoreDataError>
+    func fetchTodos() -> Result<[TodoEntity], CoreDataError>
     func saveTodo(_ todo: Todo) -> Result<Void, CoreDataError>
     func updateTodo(_ todo: Todo) -> Result<Void, CoreDataError>
     func deleteTodo(id: UUID) -> Result<Void, CoreDataError>

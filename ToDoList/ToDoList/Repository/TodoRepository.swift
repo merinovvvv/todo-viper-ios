@@ -39,7 +39,8 @@ final class TodoRepository: TodoRepositoryProtocol {
             let result = self.coreDataService.fetchTodos()
             switch result {
             case .success(let todos):
-                completion(.success(todos))
+                let domainTodos = todos.map { $0.toDomain() }
+                completion(.success(domainTodos))
             case .failure(let error):
                 completion(.failure(error))
             }
