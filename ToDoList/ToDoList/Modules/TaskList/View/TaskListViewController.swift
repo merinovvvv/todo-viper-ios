@@ -73,6 +73,27 @@ final class TaskListViewController: UIViewController,
         return view
     }()
     
+    private let contextMenuOverlayView: UIVisualEffectView = {
+        let view = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialDark))
+        view.alpha = 0
+        view.isUserInteractionEnabled = false
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        let colorOverlay = UIView()
+        colorOverlay.backgroundColor = UIColor(named: "Black")?.withAlphaComponent(0.5)
+        colorOverlay.translatesAutoresizingMaskIntoConstraints = false
+        view.contentView.addSubview(colorOverlay)
+        
+        NSLayoutConstraint.activate([
+            colorOverlay.topAnchor.constraint(equalTo: view.topAnchor),
+            colorOverlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            colorOverlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            colorOverlay.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        return view
+    }()
+    
     private lazy var countLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
@@ -212,6 +233,36 @@ final class TaskListViewController: UIViewController,
         targetedPreview(for: configuration, in: tableView)
     }
     
+    func tableView(_ tableView: UITableView,
+                   willDisplayContextMenu configuration: UIContextMenuConfiguration,
+                   animator: UIContextMenuInteractionAnimating?) {
+        guard let indexPath = configuration.identifier as? NSIndexPath,
+              let swiftIndexPath = indexPath as IndexPath?,
+              let cell = tableView.cellForRow(at: swiftIndexPath) as? TaskListCell else {
+            return
+        }
+        
+        animator?.addAnimations {
+            self.contextMenuOverlayView.alpha = 1
+            cell.setContextMenuSelected(true, animated: true)
+        }
+    }
+    
+    func tableView(_ tableView: UITableView,
+                   willEndContextMenuInteraction configuration: UIContextMenuConfiguration,
+                   animator: UIContextMenuInteractionAnimating?) {
+        guard let indexPath = configuration.identifier as? NSIndexPath,
+              let swiftIndexPath = indexPath as IndexPath?,
+              let cell = tableView.cellForRow(at: swiftIndexPath) as? TaskListCell else {
+            return
+        }
+        
+        animator?.addAnimations {
+            self.contextMenuOverlayView.alpha = 0
+            cell.setContextMenuSelected(false, animated: true)
+        }
+    }
+    
     // MARK: - UISearchBarDelegate
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         presenter.didSearch(query: searchText)
@@ -254,6 +305,7 @@ private extension TaskListViewController {
         view.addSubview(searchBar)
         view.addSubview(tableView)
         view.addSubview(footerView)
+        view.addSubview(contextMenuOverlayView)
         
         footerView.addSubview(countLabel)
         footerView.addSubview(newNoteButton)
@@ -273,6 +325,11 @@ private extension TaskListViewController {
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: searchBar.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: footerView.topAnchor),
+            
+            contextMenuOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            contextMenuOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            contextMenuOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            contextMenuOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
             footerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             footerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -317,14 +374,11 @@ private extension TaskListViewController {
     func targetedPreview(for configuration: UIContextMenuConfiguration, in tableView: UITableView) -> UITargetedPreview? {
         guard let indexPath = configuration.identifier as? NSIndexPath,
               let swiftIndexPath = indexPath as IndexPath?,
-              let cell = tableView.cellForRow(at: swiftIndexPath) else {
+              let cell = tableView.cellForRow(at: swiftIndexPath) as? TaskListCell else {
             return nil
         }
         
-        let parameters = UIPreviewParameters()
-        parameters.backgroundColor = .clear
-        
-        return UITargetedPreview(view: cell.contentView, parameters: parameters)
+        return cell.makeContextMenuPreview()
     }
     
     func taskWord(for count: Int) -> String {

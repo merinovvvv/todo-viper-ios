@@ -7,11 +7,15 @@
 
 import UIKit
 
+private enum Constants {
+    static let cornerRadius: CGFloat = 12
+    static let horizontalInset: CGFloat = 20
+    static let verticalInset: CGFloat = 0
+}
+
 final class TaskListCell: UITableViewCell {
-    static let reuseIdentifier = "TaskListCell"
-    
     // MARK: - Properties
-    
+    static let reuseIdentifier = "TaskListCell"
     var onToggleCompletion: (() -> Void)?
     
     // MARK: - UI Properties
@@ -22,6 +26,24 @@ final class TaskListCell: UITableViewCell {
         button.addTarget(self, action: #selector(didTapCompletion), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
+    }()
+    
+    private let backgroundContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.layer.cornerRadius = Constants.cornerRadius
+        view.layer.masksToBounds = true
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let selectionTintView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(named: "Gray")
+        view.alpha = 0
+        view.isUserInteractionEnabled = false
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }()
     
     private let textStackView: UIStackView = {
@@ -80,6 +102,7 @@ final class TaskListCell: UITableViewCell {
         onToggleCompletion = nil
         backgroundColor = .clear
         contentView.backgroundColor = .clear
+        setContextMenuSelected(false, animated: false)
     }
     
     override func setSelected(_ selected: Bool, animated: Bool) {
@@ -118,6 +141,36 @@ final class TaskListCell: UITableViewCell {
         
         titleLabel.attributedText = title
     }
+    
+    func setContextMenuSelected(_ isSelected: Bool, animated: Bool) {
+        let updates = {
+            self.selectionTintView.alpha = isSelected ? 1 : 0
+        }
+        
+        if animated {
+            UIView.animate(
+                withDuration: 0.18,
+                delay: 0,
+                options: [.beginFromCurrentState, .curveEaseInOut],
+                animations: updates
+            )
+        } else {
+            updates()
+        }
+    }
+    
+    func makeContextMenuPreview() -> UITargetedPreview {
+        layoutIfNeeded()
+        
+        let parameters = UIPreviewParameters()
+        parameters.backgroundColor = .clear
+        parameters.visiblePath = UIBezierPath(
+            roundedRect: backgroundContainerView.bounds,
+            cornerRadius: Constants.cornerRadius
+        )
+        
+        return UITargetedPreview(view: backgroundContainerView, parameters: parameters)
+    }
 }
 
 // MARK: - Setup UI
@@ -128,8 +181,10 @@ private extension TaskListCell {
     }
     
     func setupViewHierarchy() {
-        contentView.addSubview(completionButton)
-        contentView.addSubview(textStackView)
+        contentView.addSubview(backgroundContainerView)
+        backgroundContainerView.addSubview(selectionTintView)
+        backgroundContainerView.addSubview(completionButton)
+        backgroundContainerView.addSubview(textStackView)
         textStackView.addArrangedSubview(titleLabel)
         textStackView.addArrangedSubview(descriptionLabel)
         textStackView.addArrangedSubview(createdDateLabel)
@@ -137,15 +192,25 @@ private extension TaskListCell {
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
-            completionButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
-            completionButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            backgroundContainerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: Constants.verticalInset),
+            backgroundContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Constants.horizontalInset),
+            backgroundContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -Constants.horizontalInset),
+            backgroundContainerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -Constants.verticalInset),
+            
+            selectionTintView.topAnchor.constraint(equalTo: backgroundContainerView.topAnchor),
+            selectionTintView.leadingAnchor.constraint(equalTo: backgroundContainerView.leadingAnchor),
+            selectionTintView.trailingAnchor.constraint(equalTo: backgroundContainerView.trailingAnchor),
+            selectionTintView.bottomAnchor.constraint(equalTo: backgroundContainerView.bottomAnchor),
+            
+            completionButton.topAnchor.constraint(equalTo: backgroundContainerView.topAnchor, constant: 12),
+            completionButton.leadingAnchor.constraint(equalTo: backgroundContainerView.leadingAnchor, constant: 20),
             completionButton.widthAnchor.constraint(equalToConstant: 24),
             completionButton.heightAnchor.constraint(equalToConstant: 24),
             
-            textStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            textStackView.topAnchor.constraint(equalTo: backgroundContainerView.topAnchor, constant: 12),
             textStackView.leadingAnchor.constraint(equalTo: completionButton.trailingAnchor, constant: 8),
-            textStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            textStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
+            textStackView.trailingAnchor.constraint(equalTo: backgroundContainerView.trailingAnchor, constant: -20),
+            textStackView.bottomAnchor.constraint(equalTo: backgroundContainerView.bottomAnchor, constant: -12),
         ])
     }
 }
