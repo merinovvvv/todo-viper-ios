@@ -9,6 +9,6 @@ import Foundation
 
 protocol TaskDetailViewOutput: AnyObject {
     func viewDidLoad()
-    func didTapBack(title: String, description: String)
+    func didTapBack(title: String, description: String, createdAt: Date)
     func didTapToggleCompletion()
 }

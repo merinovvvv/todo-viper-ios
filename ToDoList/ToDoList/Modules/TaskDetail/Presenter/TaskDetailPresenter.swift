@@ -46,7 +46,7 @@ extension TaskDetailPresenter: TaskDetailViewOutput {
         view?.showTodo(makeViewModel(from: todo))
     }
     
-    func didTapBack(title: String, description: String) {
+    func didTapBack(title: String, description: String, createdAt: Date) {
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -64,7 +64,7 @@ extension TaskDetailPresenter: TaskDetailViewOutput {
             id: todo.id,
             title: trimmedTitle,
             description: trimmedDescription,
-            createdAt: todo.createdAt,
+            createdAt: createdAt,
             isCompleted: todo.isCompleted
         )
         

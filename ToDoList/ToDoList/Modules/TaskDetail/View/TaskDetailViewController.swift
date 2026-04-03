@@ -12,6 +12,11 @@ final class TaskDetailViewController: UIViewController, UITextViewDelegate {
     // MARK: - Dependencies
     
     private let presenter: TaskDetailViewOutput
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yy"
+        return formatter
+    }()
     
     // MARK: - UI Properties
     
@@ -79,6 +84,25 @@ final class TaskDetailViewController: UIViewController, UITextViewDelegate {
         label.font = .systemFont(ofSize: 12, weight: .regular)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+
+    private lazy var datePicker: UIDatePicker = {
+        let picker = UIDatePicker()
+        picker.datePickerMode = .date
+        picker.preferredDatePickerStyle = .compact
+        picker.tintColor = UIColor(named: "Yellow")
+        picker.translatesAutoresizingMaskIntoConstraints = false
+        picker.addTarget(self, action: #selector(didChangeDate), for: .valueChanged)
+        return picker
+    }()
+
+    private lazy var dateStackView: UIStackView = {
+        let stackView = UIStackView(arrangedSubviews: [dateLabel, datePicker])
+        stackView.axis = .horizontal
+        stackView.alignment = .center
+        stackView.spacing = 12
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        return stackView
     }()
     
     private let descriptionTextView: UITextView = {
@@ -152,7 +176,7 @@ private extension TaskDetailViewController {
         scrollView.addSubview(contentView)
         
         contentView.addSubview(titleStackView)
-        contentView.addSubview(dateLabel)
+        contentView.addSubview(dateStackView)
         contentView.addSubview(descriptionTextView)
     }
     
@@ -176,10 +200,11 @@ private extension TaskDetailViewController {
             completionButton.widthAnchor.constraint(equalToConstant: 28),
             completionButton.heightAnchor.constraint(equalToConstant: 28),
             
-            dateLabel.topAnchor.constraint(equalTo: titleTextView.bottomAnchor, constant: 8),
-            dateLabel.leadingAnchor.constraint(equalTo: titleStackView.leadingAnchor),
-            
-            descriptionTextView.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 16),
+            dateStackView.topAnchor.constraint(equalTo: titleTextView.bottomAnchor, constant: 8),
+            dateStackView.leadingAnchor.constraint(equalTo: titleStackView.leadingAnchor),
+            dateStackView.trailingAnchor.constraint(lessThanOrEqualTo: titleStackView.trailingAnchor),
+
+            descriptionTextView.topAnchor.constraint(equalTo: dateStackView.bottomAnchor, constant: 16),
             descriptionTextView.leadingAnchor.constraint(equalTo: titleStackView.leadingAnchor),
             descriptionTextView.trailingAnchor.constraint(equalTo: titleStackView.trailingAnchor),
             descriptionTextView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -24)
@@ -226,11 +251,19 @@ private extension TaskDetailViewController {
 private extension TaskDetailViewController {
     
     @objc func didTapBack() {
-        presenter.didTapBack(title: titleTextView.text, description: descriptionTextView.text)
+        presenter.didTapBack(
+            title: titleTextView.text,
+            description: descriptionTextView.text,
+            createdAt: datePicker.date
+        )
     }
     
     @objc func didTapCompletion() {
         presenter.didTapToggleCompletion()
+    }
+
+    @objc func didChangeDate() {
+        dateLabel.text = dateFormatter.string(from: datePicker.date)
     }
 }
 
@@ -240,6 +273,9 @@ extension TaskDetailViewController: TaskDetailViewInput {
         titleTextView.text = viewModel.title
         descriptionTextView.text = viewModel.description
         dateLabel.text = viewModel.createdAt
+        if let date = dateFormatter.date(from: viewModel.createdAt) {
+            datePicker.date = date
+        }
         updateCompletionButton(isCompleted: viewModel.isCompleted)
         updateTextViewHeights()
     }
