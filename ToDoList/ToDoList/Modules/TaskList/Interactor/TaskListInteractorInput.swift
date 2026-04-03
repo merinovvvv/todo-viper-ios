@@ -9,6 +9,6 @@ import Foundation
 
 protocol TaskListInteractorInput: AnyObject {
     func fetchTodos()
+    func updateTodo(_ todo: Todo)
     func deleteTodo(id: UUID)
-    func searchTodos(query: String)
 }

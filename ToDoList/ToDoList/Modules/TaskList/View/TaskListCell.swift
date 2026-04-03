@@ -10,7 +10,6 @@ import UIKit
 private enum Constants {
     static let cornerRadius: CGFloat = 12
     static let horizontalInset: CGFloat = 20
-    static let verticalInset: CGFloat = 0
 }
 
 final class TaskListCell: UITableViewCell {
@@ -192,10 +191,10 @@ private extension TaskListCell {
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
-            backgroundContainerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: Constants.verticalInset),
+            backgroundContainerView.topAnchor.constraint(equalTo: contentView.topAnchor),
             backgroundContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Constants.horizontalInset),
             backgroundContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -Constants.horizontalInset),
-            backgroundContainerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -Constants.verticalInset),
+            backgroundContainerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             
             selectionTintView.topAnchor.constraint(equalTo: backgroundContainerView.topAnchor),
             selectionTintView.leadingAnchor.constraint(equalTo: backgroundContainerView.leadingAnchor),
@@ -203,7 +202,7 @@ private extension TaskListCell {
             selectionTintView.bottomAnchor.constraint(equalTo: backgroundContainerView.bottomAnchor),
             
             completionButton.topAnchor.constraint(equalTo: backgroundContainerView.topAnchor, constant: 12),
-            completionButton.leadingAnchor.constraint(equalTo: backgroundContainerView.leadingAnchor, constant: 20),
+            completionButton.leadingAnchor.constraint(equalTo: backgroundContainerView.leadingAnchor),
             completionButton.widthAnchor.constraint(equalToConstant: 24),
             completionButton.heightAnchor.constraint(equalToConstant: 24),
             

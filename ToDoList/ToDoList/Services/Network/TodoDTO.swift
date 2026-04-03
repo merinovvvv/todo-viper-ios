@@ -8,12 +8,8 @@
 import Foundation
 
 struct TodoDTO: Decodable {
-    // TODO: - not used
-    let id: Int
     let todo: String
     let completed: Bool
-    // TODO: - not used
-    let userId: Int
 }
 
 extension TodoDTO {

@@ -39,6 +39,27 @@ final class TaskListInteractor: TaskListInteractorInput {
         }
     }
     
+    func updateTodo(_ todo: Todo) {
+        repository.updateTodo(todo) { [weak self] result in
+            guard let self else { return }
+            
+            switch result {
+            case .success:
+                if let index = self.todos.firstIndex(where: { $0.id == todo.id }) {
+                    self.todos[index] = todo
+                }
+                
+                DispatchQueue.main.async {
+                    self.presenter?.didUpdateTodo(todo)
+                }
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    self.presenter?.didFailWithError(error)
+                }
+            }
+        }
+    }
+    
     func deleteTodo(id: UUID) {
         repository.deleteTodo(id: id) { [weak self] result in
             guard let self else { return }
@@ -54,26 +75,6 @@ final class TaskListInteractor: TaskListInteractorInput {
                     self.presenter?.didFailWithError(error)
                 }
             }
-        }
-    }
-    
-    func searchTodos(query: String) {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        guard !trimmedQuery.isEmpty else {
-            DispatchQueue.main.async {
-                self.presenter?.didFetchTodos(self.todos)
-            }
-            return
-        }
-        
-        let filteredTodos = todos.filter { todo in
-            todo.title.localizedCaseInsensitiveContains(trimmedQuery) ||
-            todo.description.localizedCaseInsensitiveContains(trimmedQuery)
-        }
-        
-        DispatchQueue.main.async {
-            self.presenter?.didFetchTodos(filteredTodos)
         }
     }
 }

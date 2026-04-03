@@ -20,6 +20,7 @@ final class TaskListPresenter {
         formatter.dateFormat = "dd/MM/yy"
         return formatter
     }()
+    private var pendingUpdatedTodoID: UUID?
     private var allTodos: [Todo] = []
     private var visibleTodos: [Todo] = []
     private var currentSearchQuery = ""
@@ -70,14 +71,8 @@ extension TaskListPresenter: TaskListViewOutput {
             createdAt: visibleTodos[index].createdAt,
             isCompleted: !visibleTodos[index].isCompleted
         )
-        
-        visibleTodos[index] = updatedTodo
-        
-        if let allTodosIndex = allTodos.firstIndex(where: { $0.id == id }) {
-            allTodos[allTodosIndex] = updatedTodo
-        }
-        
-        view?.changeTaskStatus(at: index)
+        pendingUpdatedTodoID = id
+        interactor?.updateTodo(updatedTodo)
     }
     
     func didSearch(query: String) {
@@ -97,6 +92,25 @@ extension TaskListPresenter: TaskListInteractorOutput {
         applyCurrentFilter()
     }
     
+    func didUpdateTodo(_ todo: Todo) {
+        if let visibleIndex = visibleTodos.firstIndex(where: { $0.id == todo.id }) {
+            visibleTodos[visibleIndex] = todo
+        }
+        
+        if let allTodosIndex = allTodos.firstIndex(where: { $0.id == todo.id }) {
+            allTodos[allTodosIndex] = todo
+        }
+        
+        pendingUpdatedTodoID = nil
+        
+        if currentSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           let visibleIndex = visibleTodos.firstIndex(where: { $0.id == todo.id }) {
+            view?.changeTaskStatus(at: visibleIndex)
+        } else {
+            applyCurrentFilter()
+        }
+    }
+    
     func didDeleteTodo(id: UUID) {
         guard let visibleIndex = visibleTodos.firstIndex(where: { $0.id == id }) else {
             return
@@ -108,6 +122,11 @@ extension TaskListPresenter: TaskListInteractorOutput {
     }
     
     func didFailWithError(_ error: any Error) {
+        if let pendingUpdatedTodoID {
+            self.pendingUpdatedTodoID = nil
+            applyCurrentFilter()
+        }
+        
         view?.showError(error.localizedDescription)
     }
 }

@@ -133,6 +133,14 @@ final class TaskListViewController: UIViewController,
         presenter.viewDidLoad()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if !isMovingToParent {
+            presenter.viewDidLoad()
+        }
+    }
+    
     // MARK: - UITableViewDelegate, UITableViewDataSource
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -268,8 +276,9 @@ final class TaskListViewController: UIViewController,
         presenter.didSearch(query: searchText)
     }
     
+    // TODO: - add micro
     func searchBarBookmarkButtonClicked(_ searchBar: UISearchBar) {
-        // TODO: - mic
+        searchBar.becomeFirstResponder()
     }
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
@@ -298,6 +307,7 @@ private extension TaskListViewController {
         setupViewHierarchy()
         setupConstraints()
         updateTaskCount()
+        setupActions()
     }
     
     func setupViewHierarchy() {
@@ -349,6 +359,10 @@ private extension TaskListViewController {
         countLabel.text = "\(count) \(taskWord(for: count))"
     }
     
+    func setupActions() {
+        newNoteButton.addTarget(self, action: #selector(didTapAddTask), for: .touchUpInside)
+    }
+    
     func presentShareSheet(for viewModel: TaskListViewModel) {
         let shareText = """
         \(viewModel.title)
@@ -397,6 +411,10 @@ private extension TaskListViewController {
         default:
             return "задач"
         }
+    }
+    
+    @objc func didTapAddTask() {
+        presenter.didTapAddTask()
     }
 }
 
