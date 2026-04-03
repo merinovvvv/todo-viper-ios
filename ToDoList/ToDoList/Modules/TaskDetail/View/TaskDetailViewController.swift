@@ -91,6 +91,7 @@ final class TaskDetailViewController: UIViewController, UITextViewDelegate {
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .compact
         picker.tintColor = UIColor(named: "Yellow")
+        picker.overrideUserInterfaceStyle = .dark
         picker.translatesAutoresizingMaskIntoConstraints = false
         picker.addTarget(self, action: #selector(didChangeDate), for: .valueChanged)
         return picker
