@@ -276,7 +276,6 @@ final class TaskListViewController: UIViewController,
         presenter.didSearch(query: searchText)
     }
     
-    // TODO: - add micro
     func searchBarBookmarkButtonClicked(_ searchBar: UISearchBar) {
         searchBar.becomeFirstResponder()
     }

@@ -8,8 +8,13 @@
 import Foundation
 
 final class TaskDetailInteractor: TaskDetailInteractorInput {
+    
+    // MARK: - Dependencies
+    
     private weak var presenter: TaskDetailInteractorOutput?
     private let repository: TodoRepositoryProtocol
+    
+    // MARK: - Init
     
     init(
         presenter: TaskDetailInteractorOutput,
@@ -18,6 +23,8 @@ final class TaskDetailInteractor: TaskDetailInteractorInput {
         self.presenter = presenter
         self.repository = repository
     }
+    
+    // MARK: - Methods
     
     func saveTodo(_ todo: Todo) {
         repository.saveTodo(todo) { [weak self] result in

@@ -10,6 +10,7 @@ import UIKit
 private enum Constants {
     static let cornerRadius: CGFloat = 12
     static let horizontalInset: CGFloat = 20
+    static let contentInset: CGFloat = 12
 }
 
 final class TaskListCell: UITableViewCell {
@@ -81,6 +82,9 @@ final class TaskListCell: UITableViewCell {
         return label
     }()
     
+    private var completionWidthConstraint: NSLayoutConstraint?
+    private var textLeadingConstraint: NSLayoutConstraint?
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none
@@ -144,6 +148,10 @@ final class TaskListCell: UITableViewCell {
     func setContextMenuSelected(_ isSelected: Bool, animated: Bool) {
         let updates = {
             self.selectionTintView.alpha = isSelected ? 1 : 0
+            self.completionButton.alpha = isSelected ? 0 : 1
+            self.completionWidthConstraint?.constant = isSelected ? 0 : 24
+            self.textLeadingConstraint?.constant = isSelected ? Constants.contentInset : 32
+            self.backgroundContainerView.layoutIfNeeded()
         }
         
         if animated {
@@ -190,6 +198,9 @@ private extension TaskListCell {
     }
     
     func setupConstraints() {
+        completionWidthConstraint = completionButton.widthAnchor.constraint(equalToConstant: 24)
+        textLeadingConstraint = textStackView.leadingAnchor.constraint(equalTo: backgroundContainerView.leadingAnchor, constant: 32)
+        
         NSLayoutConstraint.activate([
             backgroundContainerView.topAnchor.constraint(equalTo: contentView.topAnchor),
             backgroundContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: Constants.horizontalInset),
@@ -203,12 +214,12 @@ private extension TaskListCell {
             
             completionButton.topAnchor.constraint(equalTo: backgroundContainerView.topAnchor, constant: 12),
             completionButton.leadingAnchor.constraint(equalTo: backgroundContainerView.leadingAnchor),
-            completionButton.widthAnchor.constraint(equalToConstant: 24),
+            completionWidthConstraint!,
             completionButton.heightAnchor.constraint(equalToConstant: 24),
             
             textStackView.topAnchor.constraint(equalTo: backgroundContainerView.topAnchor, constant: 12),
-            textStackView.leadingAnchor.constraint(equalTo: completionButton.trailingAnchor, constant: 8),
-            textStackView.trailingAnchor.constraint(equalTo: backgroundContainerView.trailingAnchor, constant: -20),
+            textLeadingConstraint!,
+            textStackView.trailingAnchor.constraint(equalTo: backgroundContainerView.trailingAnchor, constant: -Constants.contentInset),
             textStackView.bottomAnchor.constraint(equalTo: backgroundContainerView.bottomAnchor, constant: -12),
         ])
     }

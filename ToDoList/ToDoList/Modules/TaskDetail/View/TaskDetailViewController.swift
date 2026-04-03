@@ -97,7 +97,8 @@ final class TaskDetailViewController: UIViewController, UITextViewDelegate {
     
     private var titleHeightConstraint: NSLayoutConstraint?
     private var descriptionHeightConstraint: NSLayoutConstraint?
-    private var currentCreatedAt = Date()
+    
+    // MARK: - Init
     
     init(presenter: TaskDetailViewOutput) {
         self.presenter = presenter
@@ -128,6 +129,7 @@ final class TaskDetailViewController: UIViewController, UITextViewDelegate {
     }
 }
 
+// MARK: - Setup UI
 private extension TaskDetailViewController {
     func setupUI() {
         navigationItem.leftBarButtonItem = backButtonItem
@@ -218,13 +220,13 @@ private extension TaskDetailViewController {
         let imageName = isCompleted ? "checkmark.circle.fill" : "circle"
         completionButton.setImage(UIImage(systemName: imageName), for: .normal)
     }
+}
+
+// MARK: - Selectors
+private extension TaskDetailViewController {
     
     @objc func didTapBack() {
-        presenter.didTapBack(
-            title: titleTextView.text,
-            description: descriptionTextView.text,
-            createdAt: currentCreatedAt
-        )
+        presenter.didTapBack(title: titleTextView.text, description: descriptionTextView.text)
     }
     
     @objc func didTapCompletion() {
@@ -238,7 +240,6 @@ extension TaskDetailViewController: TaskDetailViewInput {
         titleTextView.text = viewModel.title
         descriptionTextView.text = viewModel.description
         dateLabel.text = viewModel.createdAt
-        currentCreatedAt = viewModel.createdAtDate
         updateCompletionButton(isCompleted: viewModel.isCompleted)
         updateTextViewHeights()
     }

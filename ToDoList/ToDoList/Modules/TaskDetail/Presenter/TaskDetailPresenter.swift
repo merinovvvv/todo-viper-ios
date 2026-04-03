@@ -8,9 +8,14 @@
 import Foundation
 
 final class TaskDetailPresenter {
+    
+    // MARK: - Dependencies
+    
     weak var view: TaskDetailViewInput?
     var interactor: TaskDetailInteractorInput?
     var router: TaskDetailRouterInput?
+    
+    // MARK: - Properties
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -19,44 +24,32 @@ final class TaskDetailPresenter {
     }()
     
     private let initialTodo: Todo?
-    private var currentTodo: Todo?
+    private var todo: Todo
+    
+    // MARK: - Init
     
     init(todo: Todo?) {
         self.initialTodo = todo
-        self.currentTodo = todo
-    }
-}
-
-extension TaskDetailPresenter: TaskDetailViewOutput {
-    func viewDidLoad() {
-        let todo = currentTodo ?? Todo(
+        self.todo = todo ?? Todo(
             id: UUID(),
             title: "",
             description: "",
             createdAt: Date(),
             isCompleted: false
         )
-        
-        view?.showTodo(
-            TaskDetailViewModel(
-                title: todo.title,
-                description: todo.description,
-                createdAt: dateFormatter.string(from: todo.createdAt),
-                createdAtDate: todo.createdAt,
-                isCompleted: todo.isCompleted
-            )
-        )
+    }
+}
+
+// MARK: - TaskDetailViewOutput
+extension TaskDetailPresenter: TaskDetailViewOutput {
+    func viewDidLoad() {
+        view?.showTodo(makeViewModel(from: todo))
     }
     
-    func didTapBack(
-        title: String,
-        description: String,
-        createdAt: Date
-    ) {
+    func didTapBack(title: String, description: String) {
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // Do not save an empty brand-new task.
         if initialTodo == nil && trimmedTitle.isEmpty && trimmedDescription.isEmpty {
             router?.close()
             return
@@ -68,14 +61,14 @@ extension TaskDetailPresenter: TaskDetailViewOutput {
         }
         
         let updatedTodo = Todo(
-            id: currentTodo?.id ?? UUID(),
+            id: todo.id,
             title: trimmedTitle,
             description: trimmedDescription,
-            createdAt: createdAt,
-            isCompleted: currentTodo?.isCompleted ?? false
+            createdAt: todo.createdAt,
+            isCompleted: todo.isCompleted
         )
         
-        currentTodo = updatedTodo
+        todo = updatedTodo
         
         if initialTodo == nil {
             interactor?.saveTodo(updatedTodo)
@@ -87,18 +80,6 @@ extension TaskDetailPresenter: TaskDetailViewOutput {
     }
     
     func didTapToggleCompletion() {
-        guard let todo = currentTodo else {
-            currentTodo = Todo(
-                id: UUID(),
-                title: "",
-                description: "",
-                createdAt: Date(),
-                isCompleted: true
-            )
-            view?.updateCompletion(isCompleted: true)
-            return
-        }
-        
         let updatedTodo = Todo(
             id: todo.id,
             title: todo.title,
@@ -107,11 +88,12 @@ extension TaskDetailPresenter: TaskDetailViewOutput {
             isCompleted: !todo.isCompleted
         )
         
-        currentTodo = updatedTodo
+        todo = updatedTodo
         view?.updateCompletion(isCompleted: updatedTodo.isCompleted)
     }
 }
 
+// MARK: - TaskDetailInteractorOutput
 extension TaskDetailPresenter: TaskDetailInteractorOutput {
     func didSaveTodo() {
         router?.close()
@@ -123,6 +105,15 @@ extension TaskDetailPresenter: TaskDetailInteractorOutput {
 }
 
 private extension TaskDetailPresenter {
+    func makeViewModel(from todo: Todo) -> TaskDetailViewModel {
+        TaskDetailViewModel(
+            title: todo.title,
+            description: todo.description,
+            createdAt: dateFormatter.string(from: todo.createdAt),
+            isCompleted: todo.isCompleted
+        )
+    }
+    
     func shouldSave(_ todo: Todo) -> Bool {
         guard let initialTodo else {
             return true
