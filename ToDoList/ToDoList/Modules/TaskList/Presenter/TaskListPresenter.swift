@@ -14,8 +14,15 @@ final class TaskListPresenter {
     var interactor: TaskListInteractorInput?
     var router: TaskListRouterInput?
     
+    // MARK: - Properties
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yy"
+        return formatter
+    }()
     private var allTodos: [Todo] = []
     private var visibleTodos: [Todo] = []
+    private var currentSearchQuery = ""
         
     // MARK: - Init
     init() { }
@@ -25,6 +32,18 @@ final class TaskListPresenter {
 extension TaskListPresenter: TaskListViewOutput {
     func viewDidLoad() {
         interactor?.fetchTodos()
+    }
+    
+    func numberOfRows() -> Int {
+        visibleTodos.count
+    }
+    
+    func viewModel(at index: Int) -> TaskListViewModel? {
+        guard visibleTodos.indices.contains(index) else {
+            return nil
+        }
+        
+        return makeViewModel(from: visibleTodos[index])
     }
     
     func didTapAddTask() {
@@ -39,7 +58,7 @@ extension TaskListPresenter: TaskListViewOutput {
         router?.navigateToTaskDetail(todo: todo)
     }
     
-    func didTapMarkAsDone(id: UUID) {
+    func didTapChangeStatus(id: UUID) {
         guard let index = visibleTodos.firstIndex(where: { $0.id == id }) else {
             return
         }
@@ -49,7 +68,7 @@ extension TaskListPresenter: TaskListViewOutput {
             title: visibleTodos[index].title,
             description: visibleTodos[index].description,
             createdAt: visibleTodos[index].createdAt,
-            isCompleted: true
+            isCompleted: !visibleTodos[index].isCompleted
         )
         
         visibleTodos[index] = updatedTodo
@@ -58,15 +77,12 @@ extension TaskListPresenter: TaskListViewOutput {
             allTodos[allTodosIndex] = updatedTodo
         }
         
-        view?.markAsDone(at: index)
-    }
-    
-    func didPressTask(id: UUID) {
-        // TODO: - Highlight a cell
+        view?.changeTaskStatus(at: index)
     }
     
     func didSearch(query: String) {
-        interactor?.searchTodos(query: query)
+        currentSearchQuery = query
+        applyCurrentFilter()
     }
     
     func didTapDelete(id: UUID) {
@@ -77,13 +93,8 @@ extension TaskListPresenter: TaskListViewOutput {
 // MARK: - TaskListInteractorOutput
 extension TaskListPresenter: TaskListInteractorOutput {
     func didFetchTodos(_ todos: [Todo]) {
-        visibleTodos = todos
-        
-        if todos.count >= allTodos.count || allTodos.isEmpty {
-            allTodos = todos
-        }
-        
-        view?.showTodos(todos.map(Self.makeViewModel))
+        allTodos = todos
+        applyCurrentFilter()
     }
     
     func didDeleteTodo(id: UUID) {
@@ -102,14 +113,7 @@ extension TaskListPresenter: TaskListInteractorOutput {
 }
 
 private extension TaskListPresenter {
-    static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ru_RU")
-        formatter.dateFormat = "d MMMM"
-        return formatter
-    }()
-    
-    static func makeViewModel(from todo: Todo) -> TaskListViewModel {
+    func makeViewModel(from todo: Todo) -> TaskListViewModel {
         TaskListViewModel(
             id: todo.id,
             title: todo.title,
@@ -117,5 +121,20 @@ private extension TaskListPresenter {
             createdAt: dateFormatter.string(from: todo.createdAt),
             isCompleted: todo.isCompleted
         )
+    }
+    
+    func applyCurrentFilter() {
+        let trimmedQuery = currentSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if trimmedQuery.isEmpty {
+            visibleTodos = allTodos
+        } else {
+            visibleTodos = allTodos.filter { todo in
+                todo.title.localizedCaseInsensitiveContains(trimmedQuery) ||
+                todo.description.localizedCaseInsensitiveContains(trimmedQuery)
+            }
+        }
+        
+        view?.reloadData()
     }
 }

@@ -16,71 +16,6 @@ final class TaskListViewController: UIViewController,
     // MARK: - Dependencies
     
     private let presenter: TaskListViewOutput
-    private var todo: [TaskListViewModel] = [
-        TaskListViewModel(
-            id: UUID(),
-            title: "first task",
-            description: "description of 1st task",
-            createdAt: "02/02/2022",
-            isCompleted: false
-        ),
-        TaskListViewModel(
-            id: UUID(),
-            title: "second task",
-            description: "description of 2nd task",
-            createdAt: "02/02/2022",
-            isCompleted: false
-        ),
-        TaskListViewModel(
-            id: UUID(),
-            title: "third task",
-            description: "description of 3rd task",
-            createdAt: "02/02/2022",
-            isCompleted: false
-        ),
-        TaskListViewModel(
-            id: UUID(),
-            title: "first task",
-            description: "description of 1st task",
-            createdAt: "02/02/2022",
-            isCompleted: false
-        ),
-        TaskListViewModel(
-            id: UUID(),
-            title: "second task",
-            description: "description of 2nd task",
-            createdAt: "02/02/2022",
-            isCompleted: false
-        ),
-        TaskListViewModel(
-            id: UUID(),
-            title: "third task",
-            description: "description of 3rd task",
-            createdAt: "02/02/2022",
-            isCompleted: false
-        ),
-        TaskListViewModel(
-            id: UUID(),
-            title: "first task",
-            description: "description of 1st task",
-            createdAt: "02/02/2022",
-            isCompleted: false
-        ),
-        TaskListViewModel(
-            id: UUID(),
-            title: "second task",
-            description: "description of 2nd task",
-            createdAt: "02/02/2022",
-            isCompleted: false
-        ),
-        TaskListViewModel(
-            id: UUID(),
-            title: "third task",
-            description: "description of 3rd task",
-            createdAt: "02/02/2022",
-            isCompleted: false
-        )
-    ]
     
     // MARK: - UI Properties
     
@@ -171,14 +106,16 @@ final class TaskListViewController: UIViewController,
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
+        super.viewDidLoad()
         view.backgroundColor = UIColor(named: "Black")
         setupUI()
+        presenter.viewDidLoad()
     }
     
     // MARK: - UITableViewDelegate, UITableViewDataSource
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return todo.count
+        presenter.numberOfRows()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -186,19 +123,121 @@ final class TaskListViewController: UIViewController,
             return UITableViewCell()
         }
         
-        let viewModel = todo[indexPath.row]
+        guard let viewModel = presenter.viewModel(at: indexPath.row) else {
+            return cell
+        }
         
         cell.configure(with: viewModel)
+        cell.onToggleCompletion = { [weak self] in
+            self?.presenter.didTapChangeStatus(id: viewModel.id)
+        }
+        
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
+        
+        guard let viewModel = presenter.viewModel(at: indexPath.row) else {
+            return
+        }
+        
+        presenter.didTapTask(id: viewModel.id)
+    }
+    
+    func tableView(_ tableView: UITableView,
+                   trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        guard let viewModel = presenter.viewModel(at: indexPath.row) else {
+            return nil
+        }
+        
+        let deleteAction = UIContextualAction(style: .destructive, title: nil) { [weak self] _, _, completion in
+            self?.presenter.didTapDelete(id: viewModel.id)
+            completion(true)
+        }
+        
+        deleteAction.image = UIImage(systemName: "trash")
+        deleteAction.backgroundColor = UIColor.systemRed
+        
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
+        configuration.performsFirstActionWithFullSwipe = true
+        return configuration
+    }
+    
+    func tableView(_ tableView: UITableView,
+                   contextMenuConfigurationForRowAt indexPath: IndexPath,
+                   point: CGPoint) -> UIContextMenuConfiguration? {
+        guard let viewModel = presenter.viewModel(at: indexPath.row) else {
+            return nil
+        }
+        
+        return UIContextMenuConfiguration(identifier: indexPath as NSIndexPath, previewProvider: nil) { [weak self] _ in
+            guard let self else {
+                return nil
+            }
+            
+            let editAction = UIAction(
+                title: "Редактировать",
+                image: UIImage(systemName: "square.and.pencil")
+            ) { _ in
+                self.presenter.didTapTask(id: viewModel.id)
+            }
+            
+            let shareAction = UIAction(
+                title: "Поделиться",
+                image: UIImage(systemName: "square.and.arrow.up")
+            ) { _ in
+                self.presentShareSheet(for: viewModel)
+            }
+            
+            let deleteAction = UIAction(
+                title: "Удалить",
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { _ in
+                self.presenter.didTapDelete(id: viewModel.id)
+            }
+            
+            return UIMenu(title: "", children: [editAction, shareAction, deleteAction])
+        }
+    }
+    
+    func tableView(_ tableView: UITableView,
+                   previewForHighlightingContextMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+        targetedPreview(for: configuration, in: tableView)
+    }
+    
+    func tableView(_ tableView: UITableView,
+                   previewForDismissingContextMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+        targetedPreview(for: configuration, in: tableView)
     }
     
     // MARK: - UISearchBarDelegate
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        
+        presenter.didSearch(query: searchText)
     }
     
     func searchBarBookmarkButtonClicked(_ searchBar: UISearchBar) {
-       
+        // TODO: - mic
+    }
+    
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        searchBar.setShowsCancelButton(true, animated: true)
+    }
+    
+    func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
+        searchBar.setShowsCancelButton(false, animated: true)
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        presenter.didSearch(query: searchBar.text ?? "")
+        searchBar.resignFirstResponder()
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.text = nil
+        presenter.didSearch(query: "")
+        searchBar.resignFirstResponder()
     }
 }
 
@@ -207,7 +246,7 @@ private extension TaskListViewController {
     func setupUI() {
         setupViewHierarchy()
         setupConstraints()
-        configureViews()
+        updateTaskCount()
     }
     
     func setupViewHierarchy() {
@@ -248,26 +287,88 @@ private extension TaskListViewController {
         ])
     }
     
-    func configureViews() {
-        countLabel.text = "\(todo.count) задач"
+    func updateTaskCount() {
+        let count = presenter.numberOfRows()
+        countLabel.text = "\(count) \(taskWord(for: count))"
+    }
+    
+    func presentShareSheet(for viewModel: TaskListViewModel) {
+        let shareText = """
+        \(viewModel.title)
+        
+        \(viewModel.description)
+        """
+        
+        let activityViewController = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
+        
+        if let popoverController = activityViewController.popoverPresentationController {
+            popoverController.sourceView = view
+            popoverController.sourceRect = CGRect(
+                x: view.bounds.midX,
+                y: view.bounds.midY,
+                width: 0,
+                height: 0
+            )
+        }
+        
+        present(activityViewController, animated: true)
+    }
+    
+    func targetedPreview(for configuration: UIContextMenuConfiguration, in tableView: UITableView) -> UITargetedPreview? {
+        guard let indexPath = configuration.identifier as? NSIndexPath,
+              let swiftIndexPath = indexPath as IndexPath?,
+              let cell = tableView.cellForRow(at: swiftIndexPath) else {
+            return nil
+        }
+        
+        let parameters = UIPreviewParameters()
+        parameters.backgroundColor = .clear
+        
+        return UITargetedPreview(view: cell.contentView, parameters: parameters)
+    }
+    
+    func taskWord(for count: Int) -> String {
+        let remainder100 = count % 100
+        let remainder10 = count % 10
+        
+        if remainder100 >= 11 && remainder100 <= 14 {
+            return "задач"
+        }
+        
+        switch remainder10 {
+        case 1:
+            return "задача"
+        case 2, 3, 4:
+            return "задачи"
+        default:
+            return "задач"
+        }
     }
 }
 
 // MARK: - TaskListViewInput
 extension TaskListViewController: TaskListViewInput {
-    func showTodos(_ todos: [TaskListViewModel]) {
-        
+    func reloadData() {
+        updateTaskCount()
+        tableView.reloadData()
     }
     
     func deleteTodo(at index: Int) {
+        guard index >= 0 else {
+            return
+        }
         
+        updateTaskCount()
+        tableView.deleteRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
     }
     
     func showError(_ message: String) {
-        
+        let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
     
-    func markAsDone(at index: Int) {
-        
+    func changeTaskStatus(at index: Int) {
+        tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
     }
 }

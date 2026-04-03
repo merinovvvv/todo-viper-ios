@@ -78,6 +78,20 @@ final class TaskListCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         onToggleCompletion = nil
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+    }
+    
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+    }
+    
+    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
+        super.setHighlighted(highlighted, animated: animated)
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
     }
     
     func configure(with viewModel: TaskListViewModel) {

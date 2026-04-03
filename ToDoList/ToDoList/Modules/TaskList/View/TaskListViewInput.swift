@@ -6,8 +6,8 @@
 //
 
 protocol TaskListViewInput: AnyObject {
-    func showTodos(_ todos: [TaskListViewModel])
+    func reloadData()
     func deleteTodo(at index: Int)
     func showError(_ message: String)
-    func markAsDone(at index: Int)
+    func changeTaskStatus(at index: Int)
 }

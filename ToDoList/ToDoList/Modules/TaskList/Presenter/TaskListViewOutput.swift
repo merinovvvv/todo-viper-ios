@@ -9,10 +9,11 @@ import Foundation
 
 protocol TaskListViewOutput: AnyObject {
     func viewDidLoad()
+    func numberOfRows() -> Int
+    func viewModel(at index: Int) -> TaskListViewModel?
     func didTapAddTask()
     func didTapTask(id: UUID)
-    func didTapMarkAsDone(id: UUID)
-    func didPressTask(id: UUID)
+    func didTapChangeStatus(id: UUID)
     func didTapDelete(id: UUID)
     func didSearch(query: String)
 }
