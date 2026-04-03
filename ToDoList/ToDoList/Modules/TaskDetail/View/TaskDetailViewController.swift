@@ -25,7 +25,7 @@ final class TaskDetailViewController: UIViewController, UITextViewDelegate {
         
         var config = UIButton.Configuration.plain()
         config.title = "Назад"
-        config.image = UIImage(systemName: "chevron.left")
+        config.image = UIImage(systemName: "chevron.left")?.withRenderingMode(.alwaysOriginal)
         config.baseForegroundColor = UIColor(named: "Yellow")
         config.imagePadding = 6
         button.configuration = config
