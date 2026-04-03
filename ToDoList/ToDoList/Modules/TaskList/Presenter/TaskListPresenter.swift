@@ -20,7 +20,6 @@ final class TaskListPresenter {
         formatter.dateFormat = "dd/MM/yy"
         return formatter
     }()
-    private var pendingUpdatedTodoID: UUID?
     private var allTodos: [Todo] = []
     private var visibleTodos: [Todo] = []
     private var currentSearchQuery = ""
@@ -71,7 +70,6 @@ extension TaskListPresenter: TaskListViewOutput {
             createdAt: visibleTodos[index].createdAt,
             isCompleted: !visibleTodos[index].isCompleted
         )
-        pendingUpdatedTodoID = id
         interactor?.updateTodo(updatedTodo)
     }
     
@@ -100,9 +98,7 @@ extension TaskListPresenter: TaskListInteractorOutput {
         if let allTodosIndex = allTodos.firstIndex(where: { $0.id == todo.id }) {
             allTodos[allTodosIndex] = todo
         }
-        
-        pendingUpdatedTodoID = nil
-        
+
         if currentSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
            let visibleIndex = visibleTodos.firstIndex(where: { $0.id == todo.id }) {
             view?.changeTaskStatus(at: visibleIndex)
@@ -122,11 +118,6 @@ extension TaskListPresenter: TaskListInteractorOutput {
     }
     
     func didFailWithError(_ error: any Error) {
-        if let pendingUpdatedTodoID {
-            self.pendingUpdatedTodoID = nil
-            applyCurrentFilter()
-        }
-        
         view?.showError(error.localizedDescription)
     }
 }

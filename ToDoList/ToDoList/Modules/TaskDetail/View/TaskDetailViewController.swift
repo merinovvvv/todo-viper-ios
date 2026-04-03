@@ -247,11 +247,7 @@ extension TaskDetailViewController: TaskDetailViewInput {
     func updateCompletion(isCompleted: Bool) {
         updateCompletionButton(isCompleted: isCompleted)
     }
-    
-    func close() {
-        navigationController?.popViewController(animated: true)
-    }
-    
+
     func showError(_ message: String) {
         let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))

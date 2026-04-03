@@ -11,7 +11,6 @@ final class TaskListInteractor: TaskListInteractorInput {
     
     private weak var presenter: TaskListInteractorOutput?
     private let repository: TodoRepositoryProtocol
-    private var todos: [Todo] = []
     
     init(
         presenter: TaskListInteractorOutput,
@@ -27,7 +26,6 @@ final class TaskListInteractor: TaskListInteractorInput {
             
             switch result {
             case .success(let todos):
-                self.todos = todos
                 DispatchQueue.main.async {
                     self.presenter?.didFetchTodos(todos)
                 }
@@ -45,10 +43,6 @@ final class TaskListInteractor: TaskListInteractorInput {
             
             switch result {
             case .success:
-                if let index = self.todos.firstIndex(where: { $0.id == todo.id }) {
-                    self.todos[index] = todo
-                }
-                
                 DispatchQueue.main.async {
                     self.presenter?.didUpdateTodo(todo)
                 }
@@ -66,7 +60,6 @@ final class TaskListInteractor: TaskListInteractorInput {
             
             switch result {
             case .success:
-                self.todos.removeAll { $0.id == id }
                 DispatchQueue.main.async {
                     self.presenter?.didDeleteTodo(id: id)
                 }
